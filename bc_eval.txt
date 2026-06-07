@@ -1,0 +1,84 @@
+
+===== ROBOT DEBUG INFO =====
+shoulder_pan_joint        joint_id=0, qpos_id=0, dof_id=0
+shoulder_lift_joint       joint_id=1, qpos_id=1, dof_id=1
+elbow_joint               joint_id=2, qpos_id=2, dof_id=2
+wrist_1_joint             joint_id=3, qpos_id=3, dof_id=3
+wrist_2_joint             joint_id=4, qpos_id=4, dof_id=4
+wrist_3_joint             joint_id=5, qpos_id=5, dof_id=5
+shoulder_pan              actuator_id=0
+shoulder_lift             actuator_id=1
+elbow                     actuator_id=2
+wrist_1                   actuator_id=3
+wrist_2                   actuator_id=4
+wrist_3                   actuator_id=5
+tip_id = 1
+goal_marker_id = 1
+nq = 41 nv = 36 nu = 6
+============================
+
+BC checkpoint: checkpoints/bc_kf_her.pt
+Trying sim_steps: [40, 60, 80, 100, 120, 150]
+Each scene tested with 6 different settings, best result kept
+
+============================================================
+IN-DISTRIBUTION
+============================================================
+  seed=0 tk=A1 [  ]: best_dist=0.121 | final=0.222 | push=0.287 | sim_steps=60
+  seed=0 tk=A4 [  ]: best_dist=0.089 | final=0.476 | push=0.641 | sim_steps=60
+  seed=1 tk=A1 [  ]: best_dist=0.114 | final=0.114 | push=0.150 | sim_steps=40
+  seed=1 tk=A4 [  ]: best_dist=0.177 | final=0.634 | push=0.791 | sim_steps=150
+  seed=2 tk=A1 [  ]: best_dist=0.237 | final=0.624 | push=0.455 | sim_steps=40
+  seed=2 tk=A4 [  ]: best_dist=0.079 | final=0.764 | push=0.995 | sim_steps=100
+  seed=3 tk=A1 [  ]: best_dist=0.223 | final=0.223 | push=0.051 | sim_steps=40
+  seed=3 tk=A4 [  ]: best_dist=0.096 | final=0.813 | push=0.973 | sim_steps=40
+  seed=4 tk=A1 [  ]: best_dist=0.160 | final=5.557 | push=5.793 | sim_steps=100
+  seed=4 tk=A4 [OK]: best_dist=0.046 | final=0.076 | push=0.176 | sim_steps=150
+  seed=5 tk=A1 [  ]: best_dist=0.133 | final=0.260 | push=0.327 | sim_steps=60
+  seed=5 tk=A4 [  ]: best_dist=0.074 | final=1.460 | push=1.299 | sim_steps=40
+  seed=6 tk=A1 [  ]: best_dist=0.128 | final=3.937 | push=3.908 | sim_steps=150
+  seed=6 tk=A4 [OK]: best_dist=0.064 | final=0.484 | push=0.666 | sim_steps=150
+  seed=7 tk=A1 [  ]: best_dist=0.229 | final=0.470 | push=0.251 | sim_steps=40
+  seed=7 tk=A4 [  ]: best_dist=0.129 | final=1.002 | push=0.843 | sim_steps=120
+  seed=8 tk=A1 [  ]: best_dist=0.169 | final=0.176 | push=0.149 | sim_steps=150
+  seed=8 tk=A4 [OK]: best_dist=0.030 | final=0.676 | push=0.487 | sim_steps=60
+  seed=9 tk=A1 [OK]: best_dist=0.045 | final=0.069 | push=0.259 | sim_steps=100
+  seed=9 tk=A4 [  ]: best_dist=0.118 | final=0.521 | push=0.719 | sim_steps=150
+
+============================================================
+OOD_N3 (target + 2 blockers)
+============================================================
+  seed=0 [  ]: best_dist=0.084 | final=0.316 | push=0.534 | disturb=0.655 | sim_steps=80
+  seed=1 [  ]: best_dist=0.078 | final=2.703 | push=2.868 | disturb=1.598 | sim_steps=120
+  seed=2 [  ]: best_dist=0.112 | final=1.790 | push=1.996 | disturb=0.468 | sim_steps=40
+  seed=3 [  ]: best_dist=0.086 | final=0.866 | push=1.050 | disturb=1.935 | sim_steps=80
+  seed=4 [  ]: best_dist=0.187 | final=1.376 | push=1.411 | disturb=4.668 | sim_steps=60
+
+============================================================
+OOD_N4 (target + 3 blockers)
+============================================================
+  seed=0 [OK]: best_dist=0.037 | final=0.492 | push=0.720 | disturb=7.291 | sim_steps=60
+  seed=1 [  ]: best_dist=0.107 | final=0.270 | push=0.099 | disturb=7.665 | sim_steps=120
+  seed=2 [OK]: best_dist=0.051 | final=0.158 | push=0.322 | disturb=1.798 | sim_steps=60
+  seed=3 [  ]: best_dist=0.126 | final=0.512 | push=0.647 | disturb=1.583 | sim_steps=80
+  seed=4 [  ]: best_dist=0.151 | final=1.133 | push=1.332 | disturb=1.551 | sim_steps=150
+
+============================================================
+OOD_N5 (target + 4 blockers)
+============================================================
+  seed=0 [  ]: best_dist=0.224 | final=0.226 | push=0.040 | disturb=5.378 | sim_steps=60
+  seed=1 [  ]: best_dist=0.274 | final=2.842 | push=2.724 | disturb=4.313 | sim_steps=150
+  seed=2 [OK]: best_dist=0.012 | final=0.248 | push=0.479 | disturb=6.219 | sim_steps=100
+  seed=3 [  ]: best_dist=0.217 | final=0.528 | push=0.333 | disturb=3.275 | sim_steps=40
+  seed=4 [OK]: best_dist=0.055 | final=0.059 | push=0.232 | disturb=2.389 | sim_steps=80
+
+============================================================
+SUMMARY
+============================================================
+  in_dist     : success=20% | best_dist=0.123 | final_dist=0.928 | push=0.961 | disturb=0.000
+  ood_n3      : success=0% | best_dist=0.109 | final_dist=1.410 | push=1.572 | disturb=1.865
+  ood_n4      : success=40% | best_dist=0.094 | final_dist=0.513 | push=0.624 | disturb=3.978
+  ood_n5      : success=40% | best_dist=0.157 | final_dist=0.781 | push=0.762 | disturb=4.315
+
+Total time: 201s
+Results saved to bc_results.json

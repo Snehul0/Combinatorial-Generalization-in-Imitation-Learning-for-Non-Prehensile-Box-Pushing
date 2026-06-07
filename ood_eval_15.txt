@@ -1,0 +1,77 @@
+
+===== ROBOT DEBUG INFO =====
+shoulder_pan_joint        joint_id=0, qpos_id=0, dof_id=0
+shoulder_lift_joint       joint_id=1, qpos_id=1, dof_id=1
+elbow_joint               joint_id=2, qpos_id=2, dof_id=2
+wrist_1_joint             joint_id=3, qpos_id=3, dof_id=3
+wrist_2_joint             joint_id=4, qpos_id=4, dof_id=4
+wrist_3_joint             joint_id=5, qpos_id=5, dof_id=5
+shoulder_pan              actuator_id=0
+shoulder_lift             actuator_id=1
+elbow                     actuator_id=2
+wrist_1                   actuator_id=3
+wrist_2                   actuator_id=4
+wrist_3                   actuator_id=5
+tip_id = 1
+goal_marker_id = 1
+nq = 41 nv = 36 nu = 6
+============================
+
+
+========== ood_n3 (15 trials) ==========
+  seed= 0 [  ]: best=0.084 | final=0.316 | disturb=0.655
+  seed= 1 [  ]: best=0.078 | final=2.703 | disturb=1.598
+  seed= 2 [  ]: best=0.112 | final=1.790 | disturb=0.468
+  seed= 3 [  ]: best=0.086 | final=0.866 | disturb=1.935
+  seed= 4 [  ]: best=0.187 | final=1.376 | disturb=4.668
+  seed= 5 [  ]: best=0.190 | final=0.442 | disturb=7.043
+  seed= 6 [  ]: best=0.168 | final=0.520 | disturb=1.260
+  seed= 7 [  ]: best=0.099 | final=0.348 | disturb=0.782
+  seed= 8 [OK]: best=0.045 | final=0.428 | disturb=1.257
+  seed= 9 [  ]: best=0.196 | final=0.392 | disturb=1.584
+  seed=10 [  ]: best=0.216 | final=0.225 | disturb=1.287
+  seed=11 [  ]: best=0.188 | final=0.552 | disturb=4.888
+  seed=12 [  ]: best=0.079 | final=0.697 | disturb=9.397
+  seed=13 [  ]: best=0.093 | final=1.574 | disturb=5.024
+  seed=14 [OK]: best=0.023 | final=0.218 | disturb=5.701
+
+========== ood_n4 (15 trials) ==========
+  seed= 0 [OK]: best=0.037 | final=0.492 | disturb=7.291
+  seed= 1 [  ]: best=0.107 | final=0.270 | disturb=7.665
+  seed= 2 [OK]: best=0.051 | final=0.158 | disturb=1.798
+  seed= 3 [  ]: best=0.126 | final=0.512 | disturb=1.583
+  seed= 4 [  ]: best=0.151 | final=1.133 | disturb=1.551
+  seed= 5 [OK]: best=0.066 | final=8.378 | disturb=1.614
+  seed= 6 [  ]: best=0.237 | final=0.237 | disturb=4.853
+  seed= 7 [  ]: best=0.213 | final=0.253 | disturb=2.535
+  seed= 8 [  ]: best=0.075 | final=0.545 | disturb=7.176
+  seed= 9 [  ]: best=0.134 | final=1.084 | disturb=1.548
+  seed=10 [  ]: best=0.198 | final=0.198 | disturb=3.074
+  seed=11 [  ]: best=0.222 | final=0.522 | disturb=0.708
+  seed=12 [  ]: best=0.248 | final=0.248 | disturb=1.136
+  seed=13 [  ]: best=0.187 | final=0.187 | disturb=1.999
+  seed=14 [  ]: best=0.222 | final=0.222 | disturb=1.837
+
+========== ood_n5 (15 trials) ==========
+  seed= 0 [  ]: best=0.224 | final=0.226 | disturb=5.378
+  seed= 1 [  ]: best=0.274 | final=2.842 | disturb=4.313
+  seed= 2 [OK]: best=0.012 | final=0.248 | disturb=6.219
+  seed= 3 [  ]: best=0.217 | final=0.528 | disturb=3.275
+  seed= 4 [OK]: best=0.055 | final=0.059 | disturb=2.389
+  seed= 5 [  ]: best=0.234 | final=0.537 | disturb=2.501
+  seed= 6 [OK]: best=0.018 | final=0.156 | disturb=2.065
+  seed= 7 [  ]: best=0.150 | final=0.452 | disturb=5.566
+  seed= 8 [OK]: best=0.039 | final=0.488 | disturb=3.793
+  seed= 9 [OK]: best=0.044 | final=0.069 | disturb=7.067
+  seed=10 [  ]: best=0.198 | final=1.065 | disturb=9.567
+  seed=11 [  ]: best=0.142 | final=0.406 | disturb=2.719
+  seed=12 [  ]: best=0.189 | final=0.264 | disturb=2.173
+  seed=13 [  ]: best=0.070 | final=1.276 | disturb=9.848
+  seed=14 [OK]: best=0.025 | final=0.714 | disturb=9.962
+
+========== UPDATED SUMMARY ==========
+Scene        Generous        Strict          Real           
+in_dist      4/20 (20%)       1/20 (5%)       4/20 (20%)       disturb=0.00m
+ood_n3       2/15 (13%)       0/15 (0%)       0/15 (0%)       disturb=3.17m
+ood_n4       3/15 (20%)       0/15 (0%)       0/15 (0%)       disturb=3.09m
+ood_n5       6/15 (40%)       2/15 (13%)       0/15 (0%)       disturb=5.12m

@@ -1,0 +1,47 @@
+
+============================================================
+  Scenario  : NORMAL — Normal push: clear path
+  Box       : A4 (amazon_box_medium_A4)
+  Start     : [-0.1    0.6    0.365]
+  Goal      : [-0.1    0.78   0.365]
+  Boxes     : ['A4']
+  thresh    : 0.1000  n_samples: 128
+============================================================
+
+[Phase 1] IK approach ...
+  [IK] Converged in 117 steps
+  → 117 IK steps
+
+[Phase 2] MPPI normal ...
+  step    0 | tip→box: 0.217 | gate: 0.00 | box→goal: 0.180 | disturb: 0.000
+  step   50 | tip→box: 0.257 | gate: 0.00 | box→goal: 0.180 | disturb: 0.000
+  step  100 | tip→box: 0.261 | gate: 0.00 | box→goal: 0.180 | disturb: 0.000
+  step  150 | tip→box: 0.277 | gate: 0.00 | box→goal: 0.180 | disturb: 0.000
+
+  [MPPI] TIMEOUT | box→goal=0.180
+  Saved normal_A4 — 317 steps | success=False | disturbance=0.0000
+[FAST MODE] n_samples=128, max_steps=200
+
+=================================================================
+  Batch run: 1 scenarios × 1 boxes = 1 demos
+  Scenarios : ['normal']
+  Boxes     : ['A4']
+  Output    : demonstrations/
+=================================================================
+
+
+[ 1/1]  scenario=normal      box=A4
+         output → demonstrations/normal_A4.npz
+-------------------------------------------------------
+  ✗  FAILED (returncode=-11) after 56.3s
+
+=================================================================
+  DONE  —  0/1 succeeded  (total time: 0.9 min)
+
+  Failed (1):
+    ✗  normal_A4
+
+  Re-run failed demos with:
+    python demo_collector.py --xml scene.xml --scenario normal --box A4 --render
+=================================================================
+

@@ -1,0 +1,71 @@
+
+===== ROBOT DEBUG INFO =====
+shoulder_pan_joint        joint_id=0, qpos_id=0, dof_id=0
+shoulder_lift_joint       joint_id=1, qpos_id=1, dof_id=1
+elbow_joint               joint_id=2, qpos_id=2, dof_id=2
+wrist_1_joint             joint_id=3, qpos_id=3, dof_id=3
+wrist_2_joint             joint_id=4, qpos_id=4, dof_id=4
+wrist_3_joint             joint_id=5, qpos_id=5, dof_id=5
+shoulder_pan              actuator_id=0
+shoulder_lift             actuator_id=1
+elbow                     actuator_id=2
+wrist_1                   actuator_id=3
+wrist_2                   actuator_id=4
+wrist_3                   actuator_id=5
+tip_id = 1
+goal_marker_id = 1
+nq = 41 nv = 36 nu = 6
+============================
+
+============================================================
+Recording Diffusion in-distribution videos
+============================================================
+  [  ] seed=0 tk=A1 (ss=60, es=4): best=0.144 -> videos_diffusion/in_dist_seed0_A1.mp4
+  [  ] seed=0 tk=A4 (ss=80, es=6): best=0.073 -> videos_diffusion/in_dist_seed0_A4.mp4
+  [  ] seed=1 tk=A1 (ss=100, es=6): best=0.150 -> videos_diffusion/in_dist_seed1_A1.mp4
+  [  ] seed=1 tk=A4 (ss=80, es=6): best=0.073 -> videos_diffusion/in_dist_seed1_A4.mp4
+  [  ] seed=2 tk=A1 (ss=80, es=6): best=0.160 -> videos_diffusion/in_dist_seed2_A1.mp4
+  [OK] seed=2 tk=A4 (ss=80, es=6): best=0.021 -> videos_diffusion/in_dist_seed2_A4.mp4
+  [  ] seed=3 tk=A1 (ss=80, es=6): best=0.185 -> videos_diffusion/in_dist_seed3_A1.mp4
+  [OK] seed=3 tk=A4 (ss=100, es=6): best=0.017 -> videos_diffusion/in_dist_seed3_A4.mp4
+  [  ] seed=4 tk=A1 (ss=80, es=6): best=0.141 -> videos_diffusion/in_dist_seed4_A1.mp4
+  [OK] seed=4 tk=A4 (ss=100, es=6): best=0.030 -> videos_diffusion/in_dist_seed4_A4.mp4
+  [OK] seed=5 tk=A1 (ss=80, es=6): best=0.045 -> videos_diffusion/in_dist_seed5_A1.mp4
+  [  ] seed=5 tk=A4 (ss=80, es=6): best=0.107 -> videos_diffusion/in_dist_seed5_A4.mp4
+  [  ] seed=6 tk=A1 (ss=80, es=4): best=0.077 -> videos_diffusion/in_dist_seed6_A1.mp4
+  [OK] seed=6 tk=A4 (ss=60, es=4): best=0.033 -> videos_diffusion/in_dist_seed6_A4.mp4
+  [  ] seed=7 tk=A1 (ss=80, es=6): best=0.128 -> videos_diffusion/in_dist_seed7_A1.mp4
+  [OK] seed=7 tk=A4 (ss=100, es=6): best=0.046 -> videos_diffusion/in_dist_seed7_A4.mp4
+  [  ] seed=8 tk=A1 (ss=100, es=6): best=0.095 -> videos_diffusion/in_dist_seed8_A1.mp4
+  [  ] seed=8 tk=A4 (ss=80, es=4): best=0.080 -> videos_diffusion/in_dist_seed8_A4.mp4
+  [  ] seed=9 tk=A1 (ss=60, es=4): best=0.101 -> videos_diffusion/in_dist_seed9_A1.mp4
+  [OK] seed=9 tk=A4 (ss=60, es=4): best=0.059 -> videos_diffusion/in_dist_seed9_A4.mp4
+
+============================================================
+Recording OOD_N3 videos
+============================================================
+  [  ] seed=0 (ss=100, es=6): best=0.152 disturb=2.658
+  [OK] seed=1 (ss=80, es=6): best=0.061 disturb=1.759
+  [OK] seed=2 (ss=80, es=6): best=0.065 disturb=0.884
+  [  ] seed=3 (ss=80, es=4): best=0.207 disturb=2.519
+  [  ] seed=4 (ss=80, es=4): best=0.135 disturb=1.763
+
+============================================================
+Recording OOD_N4 videos
+============================================================
+  [  ] seed=0 (ss=80, es=4): best=0.200 disturb=2.766
+  [OK] seed=1 (ss=100, es=6): best=0.032 disturb=3.108
+  [  ] seed=2 (ss=80, es=6): best=0.219 disturb=2.645
+  [OK] seed=3 (ss=80, es=6): best=0.051 disturb=4.080
+  [  ] seed=4 (ss=80, es=4): best=0.142 disturb=5.567
+
+============================================================
+Recording OOD_N5 videos
+============================================================
+  [  ] seed=0 (ss=60, es=4): best=0.214 disturb=3.090
+  [  ] seed=1 (ss=100, es=6): best=0.112 disturb=3.447
+  [  ] seed=2 (ss=60, es=4): best=0.109 disturb=12.324
+  [  ] seed=3 (ss=80, es=4): best=0.159 disturb=3.851
+  [  ] seed=4 (ss=100, es=6): best=0.087 disturb=4.688
+
+All videos saved to videos_diffusion/

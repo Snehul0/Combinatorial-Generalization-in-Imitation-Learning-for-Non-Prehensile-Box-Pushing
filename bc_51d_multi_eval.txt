@@ -1,0 +1,58 @@
+Loading: checkpoints/bc_51d_multi.pt
+BC obs_dim: 51, best val loss: 0.003702325561309453
+
+Loaded scene: nq=41, nu=6
+
+
+=== IN-DISTRIBUTION ===
+  seed=0 tk=A1 [  ]: best=0.167 | disturb=0.000 [1s]
+  seed=0 tk=A4 [OK]: best=0.043 | disturb=0.000 [2s]
+  seed=1 tk=A1 [  ]: best=0.166 | disturb=0.000 [4s]
+  seed=1 tk=A4 [OK]: best=0.062 | disturb=0.000 [5s]
+  seed=2 tk=A1 [  ]: best=0.225 | disturb=0.000 [6s]
+  seed=2 tk=A4 [  ]: best=0.094 | disturb=0.000 [7s]
+  seed=3 tk=A1 [  ]: best=0.227 | disturb=0.000 [8s]
+  seed=3 tk=A4 [  ]: best=0.109 | disturb=0.000 [10s]
+  seed=4 tk=A1 [  ]: best=0.178 | disturb=0.000 [11s]
+  seed=4 tk=A4 [OK]: best=0.019 | disturb=0.000 [12s]
+  seed=5 tk=A1 [  ]: best=0.193 | disturb=0.000 [13s]
+  seed=5 tk=A4 [OK]: best=0.037 | disturb=0.000 [15s]
+  seed=6 tk=A1 [  ]: best=0.190 | disturb=0.000 [16s]
+  seed=6 tk=A4 [  ]: best=0.075 | disturb=0.000 [17s]
+  seed=7 tk=A1 [  ]: best=0.207 | disturb=0.000 [18s]
+  seed=7 tk=A4 [OK]: best=0.045 | disturb=0.000 [19s]
+  seed=8 tk=A1 [  ]: best=0.174 | disturb=0.000 [20s]
+  seed=8 tk=A4 [  ]: best=0.073 | disturb=0.000 [21s]
+  seed=9 tk=A1 [  ]: best=0.169 | disturb=0.000 [22s]
+  seed=9 tk=A4 [OK]: best=0.024 | disturb=0.000 [23s]
+
+=== OOD_N3 ===
+  seed=0 [  ]: best=0.230 | disturb=0.703 [24s]
+  seed=1 [  ]: best=0.190 | disturb=0.288 [25s]
+  seed=2 [  ]: best=0.216 | disturb=0.379 [26s]
+  seed=3 [  ]: best=0.209 | disturb=0.213 [27s]
+  seed=4 [  ]: best=0.197 | disturb=0.510 [28s]
+
+=== OOD_N4 ===
+  seed=0 [  ]: best=0.236 | disturb=1.692 [29s]
+  seed=1 [  ]: best=0.210 | disturb=0.493 [30s]
+  seed=2 [  ]: best=0.219 | disturb=1.412 [31s]
+  seed=3 [  ]: best=0.217 | disturb=1.570 [32s]
+  seed=4 [  ]: best=0.201 | disturb=0.961 [33s]
+
+=== OOD_N5 ===
+  seed=0 [  ]: best=0.243 | disturb=2.076 [34s]
+  seed=1 [  ]: best=0.284 | disturb=2.334 [35s]
+  seed=2 [  ]: best=0.238 | disturb=1.293 [36s]
+  seed=3 [  ]: best=0.261 | disturb=1.849 [37s]
+  seed=4 [  ]: best=0.213 | disturb=1.625 [38s]
+
+=== SUMMARY (BC-51D-multi) ===
+Scene          Generous         Strict           Real             Avg Disturb
+in_dist        6/20 (30%)        0/20 (0%)        6/20 (30%)        0.000m
+ood_n3         0/5 (0%)        0/5 (0%)        0/5 (0%)        0.418m
+ood_n4         0/5 (0%)        0/5 (0%)        0/5 (0%)        1.226m
+ood_n5         0/5 (0%)        0/5 (0%)        0/5 (0%)        1.836m
+
+Total time: 0.6 min
+Saved: bc_51d_multi_results.json

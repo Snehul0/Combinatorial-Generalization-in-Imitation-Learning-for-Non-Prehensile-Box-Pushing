@@ -1,0 +1,74 @@
+
+===== ROBOT DEBUG INFO =====
+shoulder_pan_joint        joint_id=0, qpos_id=0, dof_id=0
+shoulder_lift_joint       joint_id=1, qpos_id=1, dof_id=1
+elbow_joint               joint_id=2, qpos_id=2, dof_id=2
+wrist_1_joint             joint_id=3, qpos_id=3, dof_id=3
+wrist_2_joint             joint_id=4, qpos_id=4, dof_id=4
+wrist_3_joint             joint_id=5, qpos_id=5, dof_id=5
+shoulder_pan              actuator_id=0
+shoulder_lift             actuator_id=1
+elbow                     actuator_id=2
+wrist_1                   actuator_id=3
+wrist_2                   actuator_id=4
+wrist_3                   actuator_id=5
+tip_id = 1
+goal_marker_id = 1
+nq = 41 nv = 36 nu = 6
+============================
+
+============================================================
+ACT IN-DISTRIBUTION
+============================================================
+  seed=0 tk=A1 [  ]: best=0.097 | push=0.586 | (ss=80, es=2)
+  seed=0 tk=A4 [OK]: best=0.012 | push=0.317 | (ss=120, es=6)
+  seed=1 tk=A1 [OK]: best=0.010 | push=0.583 | (ss=80, es=6)
+  seed=1 tk=A4 [OK]: best=0.014 | push=0.659 | (ss=100, es=6)
+  seed=2 tk=A1 [  ]: best=0.113 | push=0.787 | (ss=80, es=6)
+  seed=2 tk=A4 [OK]: best=0.034 | push=0.488 | (ss=60, es=4)
+  seed=3 tk=A1 [  ]: best=0.094 | push=0.468 | (ss=80, es=4)
+  seed=3 tk=A4 [OK]: best=0.022 | push=0.518 | (ss=80, es=4)
+  seed=4 tk=A1 [OK]: best=0.033 | push=0.508 | (ss=80, es=6)
+  seed=4 tk=A4 [OK]: best=0.012 | push=0.611 | (ss=60, es=6)
+  seed=5 tk=A1 [OK]: best=0.016 | push=0.115 | (ss=120, es=6)
+  seed=5 tk=A4 [OK]: best=0.013 | push=0.462 | (ss=80, es=6)
+  seed=6 tk=A1 [OK]: best=0.003 | push=0.472 | (ss=80, es=4)
+  seed=6 tk=A4 [OK]: best=0.014 | push=0.310 | (ss=60, es=4)
+  seed=7 tk=A1 [OK]: best=0.051 | push=0.672 | (ss=120, es=6)
+  seed=7 tk=A4 [OK]: best=0.006 | push=0.663 | (ss=120, es=6)
+  seed=8 tk=A1 [OK]: best=0.007 | push=0.474 | (ss=60, es=6)
+  seed=8 tk=A4 [OK]: best=0.002 | push=0.675 | (ss=100, es=4)
+  seed=9 tk=A1 [OK]: best=0.020 | push=0.772 | (ss=60, es=4)
+  seed=9 tk=A4 [OK]: best=0.010 | push=0.383 | (ss=60, es=6)
+
+OOD_N3
+  seed=0 [OK]: best=0.022 | disturb=1.084 | (ss=60, es=4)
+  seed=1 [OK]: best=0.027 | disturb=0.873 | (ss=60, es=6)
+  seed=2 [OK]: best=0.020 | disturb=1.560 | (ss=60, es=6)
+  seed=3 [OK]: best=0.031 | disturb=1.319 | (ss=80, es=4)
+  seed=4 [  ]: best=0.088 | disturb=0.650 | (ss=120, es=6)
+
+OOD_N4
+  seed=0 [OK]: best=0.038 | disturb=1.829 | (ss=60, es=4)
+  seed=1 [OK]: best=0.027 | disturb=1.456 | (ss=120, es=6)
+  seed=2 [OK]: best=0.058 | disturb=2.005 | (ss=80, es=4)
+  seed=3 [OK]: best=0.056 | disturb=1.804 | (ss=80, es=4)
+  seed=4 [  ]: best=0.102 | disturb=1.624 | (ss=120, es=6)
+
+OOD_N5
+  seed=0 [  ]: best=0.073 | disturb=2.087 | (ss=80, es=6)
+  seed=1 [  ]: best=0.258 | disturb=2.334 | (ss=80, es=4)
+  seed=2 [  ]: best=0.081 | disturb=2.743 | (ss=60, es=6)
+  seed=3 [  ]: best=0.223 | disturb=2.166 | (ss=80, es=4)
+  seed=4 [OK]: best=0.065 | disturb=1.872 | (ss=80, es=4)
+
+============================================================
+SUMMARY
+============================================================
+Scene        Generous       Strict         Real          
+in_dist      17/20 (85%)     0/20 (0%)     17/20 (85%)     disturb=0.00m
+ood_n3       4/5 (80%)     0/5 (0%)     0/5 (0%)     disturb=1.10m
+ood_n4       4/5 (80%)     0/5 (0%)     0/5 (0%)     disturb=1.74m
+ood_n5       1/5 (20%)     0/5 (0%)     0/5 (0%)     disturb=2.24m
+
+Total time: 380s

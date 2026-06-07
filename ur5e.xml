@@ -1,0 +1,541 @@
+<mujoco model="ur5e_centered_rack_with_attached_pusher">
+  <compiler angle="radian" meshdir="assets" autolimits="true"/>
+
+  <option integrator="implicitfast" gravity="0 0 -9.81"/>
+
+  <default>
+    <default class="ur5e">
+      <material specular="0.5" shininess="0.25"/>
+      <joint axis="0 1 0" range="-6.28319 6.28319" armature="0.1"/>
+      <general gaintype="fixed" biastype="affine"
+               ctrlrange="-6.2831 6.2831"
+               gainprm="2000"
+               biasprm="0 -2000 -400"
+               forcerange="-150 150"/>
+
+      <default class="size3">
+        <default class="size3_limited">
+          <joint range="-3.1415 3.1415"/>
+          <general ctrlrange="-3.1415 3.1415"/>
+        </default>
+      </default>
+
+      <default class="size1">
+        <general gainprm="500"
+                 biasprm="0 -500 -100"
+                 forcerange="-28 28"/>
+      </default>
+
+      <default class="visual">
+        <geom type="mesh" contype="0" conaffinity="0" group="2"/>
+      </default>
+
+      <default class="collision">
+        <geom type="capsule" group="3"/>
+        <default class="eef_collision">
+          <geom type="cylinder"/>
+        </default>
+      </default>
+
+      <site size="0.001" rgba="0.5 0.5 0.5 0.3" group="4"/>
+    </default>
+  </default>
+
+  <asset>
+    <!-- UR5e materials -->
+    <material class="ur5e" name="black" rgba="0.033 0.033 0.033 1"/>
+    <material class="ur5e" name="jointgray" rgba="0.278 0.278 0.278 1"/>
+    <material class="ur5e" name="linkgray" rgba="0.82 0.82 0.82 1"/>
+    <material class="ur5e" name="urblue" rgba="0.49 0.678 0.8 1"/>
+
+    <!-- UR5e meshes -->
+    <mesh file="base_0.obj"/>
+    <mesh file="base_1.obj"/>
+    <mesh file="shoulder_0.obj"/>
+    <mesh file="shoulder_1.obj"/>
+    <mesh file="shoulder_2.obj"/>
+    <mesh file="upperarm_0.obj"/>
+    <mesh file="upperarm_1.obj"/>
+    <mesh file="upperarm_2.obj"/>
+    <mesh file="upperarm_3.obj"/>
+    <mesh file="forearm_0.obj"/>
+    <mesh file="forearm_1.obj"/>
+    <mesh file="forearm_2.obj"/>
+    <mesh file="forearm_3.obj"/>
+    <mesh file="wrist1_0.obj"/>
+    <mesh file="wrist1_1.obj"/>
+    <mesh file="wrist1_2.obj"/>
+    <mesh file="wrist2_0.obj"/>
+    <mesh file="wrist2_1.obj"/>
+    <mesh file="wrist2_2.obj"/>
+    <mesh file="wrist3.obj"/>
+
+    <!-- Floor texture -->
+    <texture name="grid" type="2d" builtin="checker"
+             rgb1="0.85 0.85 0.85"
+             rgb2="0.65 0.65 0.65"
+             width="300"
+             height="300"/>
+
+    <material name="floor_mat" texture="grid" texrepeat="10 10"/>
+
+    <!-- Rack materials -->
+    <material name="rack_dark" rgba="0.18 0.18 0.18 1"/>
+    <material name="shelf_grey" rgba="0.55 0.55 0.55 1"/>
+
+    <!-- Box materials -->
+    <material name="amazon_box_1" rgba="0.72 0.52 0.32 1"/>
+    <material name="amazon_box_2" rgba="0.78 0.58 0.36 1"/>
+    <material name="amazon_box_3" rgba="0.68 0.48 0.28 1"/>
+    <material name="amazon_box_4" rgba="0.82 0.62 0.40 1"/>
+    <material name="amazon_box_5" rgba="0.60 0.40 0.24 1"/>
+  </asset>
+
+  <worldbody>
+
+    <!-- ========================================================= -->
+    <!-- LIGHTING AND CAMERAS -->
+    <!-- ========================================================= -->
+
+    <light name="spotlight"
+           mode="targetbodycom"
+           target="wrist_2_link"
+           pos="0 -1 2"/>
+
+    <light name="main_light"
+           pos="0 -3 5"
+           dir="0 0 -1"
+           diffuse="1 1 1"/>
+
+    <camera name="front_camera"
+            pos="0 -3.5 1.7"
+            xyaxes="1 0 0 0 0.45 1"/>
+
+    <camera name="top_camera"
+            pos="0 1.05 3.3"
+            xyaxes="1 0 0 0 1 0"/>
+
+    <!-- Warehouse floor -->
+    <geom name="warehouse_floor"
+          type="plane"
+          size="5 5 0.1"
+          material="floor_mat"/>
+          
+          <!-- Visible goal marker for pushing task -->
+    <geom name="goal_marker"
+          type="sphere"
+          pos="0.25 0.45 0.365"
+          size="0.04"
+          rgba="0 1 0 0.6"
+          contype="0"
+          conaffinity="0"/>
+
+    <!-- ========================================================= -->
+    <!-- UR5e ROBOT ARM -->
+    <!-- ========================================================= -->
+
+    <body name="base" quat="0 0 0 -1" childclass="ur5e">
+      <inertial mass="4.0"
+                pos="0 0 0"
+                diaginertia="0.00443333156 0.00443333156 0.0072"/>
+
+      <geom mesh="base_0" material="black" class="visual"/>
+      <geom mesh="base_1" material="jointgray" class="visual"/>
+
+      <body name="shoulder_link" pos="0 0 0.163">
+        <inertial mass="3.7"
+                  pos="0 0 0"
+                  diaginertia="0.0102675 0.0102675 0.00666"/>
+
+        <joint name="shoulder_pan_joint" class="size3" axis="0 0 1"/>
+
+        <geom mesh="shoulder_0" material="urblue" class="visual"/>
+        <geom mesh="shoulder_1" material="black" class="visual"/>
+        <geom mesh="shoulder_2" material="jointgray" class="visual"/>
+        <geom class="collision" size="0.06 0.06" pos="0 0 -0.04"/>
+
+        <body name="upper_arm_link" pos="0 0.138 0" quat="1 0 1 0">
+          <inertial mass="8.393"
+                    pos="0 0 0.2125"
+                    diaginertia="0.133886 0.133886 0.0151074"/>
+
+          <joint name="shoulder_lift_joint" class="size3"/>
+
+          <geom mesh="upperarm_0" material="linkgray" class="visual"/>
+          <geom mesh="upperarm_1" material="black" class="visual"/>
+          <geom mesh="upperarm_2" material="jointgray" class="visual"/>
+          <geom mesh="upperarm_3" material="urblue" class="visual"/>
+          <geom class="collision" pos="0 -0.04 0" quat="1 1 0 0" size="0.06 0.06"/>
+          <geom class="collision" size="0.05 0.2" pos="0 0 0.2"/>
+
+          <body name="forearm_link" pos="0 -0.131 0.425">
+            <inertial mass="2.275"
+                      pos="0 0 0.196"
+                      diaginertia="0.0311796 0.0311796 0.004095"/>
+
+            <joint name="elbow_joint" class="size3_limited"/>
+
+            <geom mesh="forearm_0" material="urblue" class="visual"/>
+            <geom mesh="forearm_1" material="linkgray" class="visual"/>
+            <geom mesh="forearm_2" material="black" class="visual"/>
+            <geom mesh="forearm_3" material="jointgray" class="visual"/>
+            <geom class="collision" pos="0 0.08 0" quat="1 1 0 0" size="0.055 0.06"/>
+            <geom class="collision" size="0.038 0.19" pos="0 0 0.2"/>
+
+            <body name="wrist_1_link" pos="0 0 0.392" quat="1 0 1 0">
+              <inertial mass="1.219"
+                        pos="0 0.127 0"
+                        diaginertia="0.0025599 0.0025599 0.0021942"/>
+
+              <joint name="wrist_1_joint" class="size1"/>
+
+              <geom mesh="wrist1_0" material="black" class="visual"/>
+              <geom mesh="wrist1_1" material="urblue" class="visual"/>
+              <geom mesh="wrist1_2" material="jointgray" class="visual"/>
+              <geom class="collision" pos="0 0.05 0" quat="1 1 0 0" size="0.04 0.07"/>
+
+              <body name="wrist_2_link" pos="0 0.127 0">
+                <inertial mass="1.219"
+                          pos="0 0 0.1"
+                          diaginertia="0.0025599 0.0025599 0.0021942"/>
+
+                <joint name="wrist_2_joint" axis="0 0 1" class="size1"/>
+
+                <geom mesh="wrist2_0" material="black" class="visual"/>
+                <geom mesh="wrist2_1" material="urblue" class="visual"/>
+                <geom mesh="wrist2_2" material="jointgray" class="visual"/>
+                <geom class="collision" size="0.04 0.06" pos="0 0 0.04"/>
+                <geom class="collision" pos="0 0.02 0.1" quat="1 1 0 0" size="0.04 0.04"/>
+
+                <body name="wrist_3_link" pos="0 0 0.1">
+                  <inertial mass="0.1889"
+                            pos="0 0.0771683 0"
+                            quat="1 0 0 1"
+                            diaginertia="0.000132134 9.90863e-05 9.90863e-05"/>
+
+                  <joint name="wrist_3_joint" class="size1"/>
+
+                  <geom material="linkgray" mesh="wrist3" class="visual"/>
+                  <geom class="eef_collision"
+                        pos="0 0.08 0"
+                        quat="1 1 0 0"
+                        size="0.04 0.02"/>
+
+                  <!-- Attachment site -->
+                  <site name="attachment_site" pos="0 0.1 0" quat="-1 1 0 0"/>
+
+                  <!-- Attached pusher tool -->
+                  <geom name="pusher_plate"
+                        type="box"
+                        pos="0 0.105 0"
+                        size="0.040 0.010 0.030"
+                        rgba="0.02 0.02 0.02 1"
+                        friction="2 0.5 0.01"
+                        contype="1"
+                        conaffinity="1"
+                        condim="3"/>
+
+                  <geom name="pusher_tip"
+                        type="box"
+                        pos="0 0.115 0"
+                        size="0.050 0.010 0.035"
+                        rgba="0.02 0.02 0.02 1"
+                        friction="2 0.5 0.01"
+                        contype="1"
+                        conaffinity="1"
+                        condim="3" />
+                        
+                  
+                  <geom name="ee_pusher_collision"
+                        type="box"
+                        pos="0 0.13 0"
+                        size="0.035 0.012 0.035"
+                        rgba="0.05 0.05 0.05 1"
+                        contype="1"
+                        conaffinity="1"
+                        condim="3"
+                        friction="2 0.5 0.01"/>
+                        
+                  <site name="pusher_tip_site"
+                        pos="0 0.155 0"
+                        size="0.025"
+                        rgba="1 0 0 1"
+                        />
+                </body>
+
+              </body>
+            </body>
+          </body>
+        </body>
+      </body>
+    </body>
+
+    <!-- ========================================================= -->
+    <!-- CENTERED SCALED OLD-STYLE WAREHOUSE RACK -->
+    <!-- Changed from pos="0.45 1.30 0" to pos="0.00 1.05 0"
+         so rack is centered and closer to UR5e.
+    -->
+    <!-- ========================================================= -->
+
+    <body name="warehouse_rack" pos="0.00 0.65 0">
+
+      <!-- Vertical posts -->
+      <geom name="post_front_left"
+            type="box"
+            pos="-0.70 -0.32 0.55"
+            size="0.025 0.025 0.55"
+            material="rack_dark"/>
+
+      <geom name="post_front_right"
+            type="box"
+            pos="0.70 -0.32 0.55"
+            size="0.025 0.025 0.55"
+            material="rack_dark"/>
+
+      <geom name="post_back_left"
+            type="box"
+            pos="-0.70 0.32 0.55"
+            size="0.025 0.025 0.55"
+            material="rack_dark"/>
+
+      <geom name="post_back_right"
+            type="box"
+            pos="0.70 0.32 0.55"
+            size="0.025 0.025 0.55"
+            material="rack_dark"/>
+
+      <!-- Three shelf surfaces -->
+      <geom name="shelf_surface_bottom"
+            type="box"
+            pos="0 0 0.28"
+            size="0.73 0.35 0.025"
+            material="shelf_grey"/>
+
+      <geom name="shelf_surface_middle"
+            type="box"
+            pos="0 0 0.70"
+            size="0.73 0.35 0.025"
+            material="shelf_grey"/>
+
+      <geom name="shelf_surface_top"
+            type="box"
+            pos="0 0 1.12"
+            size="0.73 0.35 0.025"
+            material="shelf_grey"/>
+
+      <!-- Front beams -->
+      <geom name="front_beam_bottom"
+            type="box"
+            pos="0 -0.32 0.28"
+            size="0.73 0.018 0.030"
+            material="rack_dark"/>
+
+      <geom name="front_beam_middle"
+            type="box"
+            pos="0 -0.32 0.70"
+            size="0.73 0.018 0.030"
+            material="rack_dark"/>
+
+      <geom name="front_beam_top"
+            type="box"
+            pos="0 -0.32 1.12"
+            size="0.73 0.018 0.030"
+            material="rack_dark"/>
+
+      <!-- Back beams -->
+      <geom name="back_beam_bottom"
+            type="box"
+            pos="0 0.32 0.28"
+            size="0.73 0.018 0.030"
+            material="rack_dark"/>
+
+      <geom name="back_beam_middle"
+            type="box"
+            pos="0 0.32 0.70"
+            size="0.73 0.018 0.030"
+            material="rack_dark"/>
+
+      <geom name="back_beam_top"
+            type="box"
+            pos="0 0.32 1.12"
+            size="0.73 0.018 0.030"
+            material="rack_dark"/>
+
+      <!-- Left side beams -->
+      <geom name="left_side_beam_bottom"
+            type="box"
+            pos="-0.70 0 0.28"
+            size="0.018 0.35 0.030"
+            material="rack_dark"/>
+
+      <geom name="left_side_beam_middle"
+            type="box"
+            pos="-0.70 0 0.70"
+            size="0.018 0.35 0.030"
+            material="rack_dark"/>
+
+      <geom name="left_side_beam_top"
+            type="box"
+            pos="-0.70 0 1.12"
+            size="0.018 0.35 0.030"
+            material="rack_dark"/>
+
+      <!-- Right side beams -->
+      <geom name="right_side_beam_bottom"
+            type="box"
+            pos="0.70 0 0.28"
+            size="0.018 0.35 0.030"
+            material="rack_dark"/>
+
+      <geom name="right_side_beam_middle"
+            type="box"
+            pos="0.70 0 0.70"
+            size="0.018 0.35 0.030"
+            material="rack_dark"/>
+
+      <geom name="right_side_beam_top"
+            type="box"
+            pos="0.70 0 1.12"
+            size="0.018 0.35 0.030"
+            material="rack_dark"/>
+
+      <!-- Solid back walls / stoppers -->
+      <geom name="back_wall_lower"
+            type="box"
+            pos="0 0.35 0.49"
+            size="0.73 0.018 0.18"
+            material="rack_dark"/>
+
+      <geom name="back_wall_upper"
+            type="box"
+            pos="0 0.35 0.91"
+            size="0.73 0.018 0.18"
+            material="rack_dark"/>
+
+      <!-- Left side walls -->
+      <geom name="left_wall_lower"
+            type="box"
+            pos="-0.73 0 0.49"
+            size="0.018 0.35 0.18"
+            material="rack_dark"/>
+
+      <geom name="left_wall_upper"
+            type="box"
+            pos="-0.73 0 0.91"
+            size="0.018 0.35 0.18"
+            material="rack_dark"/>
+
+      <!-- Right side walls -->
+      <geom name="right_wall_lower"
+            type="box"
+            pos="0.73 0 0.49"
+            size="0.018 0.35 0.18"
+            material="rack_dark"/>
+
+      <geom name="right_wall_upper"
+            type="box"
+            pos="0.73 0 0.91"
+            size="0.018 0.35 0.18"
+            material="rack_dark"/>
+
+    </body>
+
+    <!-- ========================================================= -->
+    <!-- FIVE MOVABLE BOXES -->
+    <!-- Updated positions so boxes move with the centered rack.
+    -->
+    <!-- ========================================================= -->
+
+    <!-- Box 1: lower shelf, left -->
+    <body name="amazon_box_small_A1" pos="-0.50 0.45 0.346">
+      <freejoint/>
+      <geom name="amazon_box_small_A1_geom"
+            type="box"
+            size="0.080 0.055 0.040"
+            mass="0.25"
+            material="amazon_box_1"
+            friction="2 0.5 0.01"
+            contype="1"
+            conaffinity="1"
+            condim="3"/>
+    </body>
+
+    <!-- Box 2: lower shelf, middle -->
+    <body name="amazon_box_medium_A4" pos="-0.10 0.45 0.365">
+      <freejoint/>
+      <geom name="amazon_box_medium_A4_geom"
+            type="box"
+            size="0.100 0.065 0.055"
+            mass="0.35"
+            material="amazon_box_2"
+            friction="2 0.5 0.01"
+            contype="1"
+            conaffinity="1"
+            condim="3"/>
+    </body>
+
+    <!-- Box 3: lower shelf, right -->
+    <body name="amazon_box_extra_large_2BB" pos="0.33 0.45 0.395">
+      <freejoint/>
+      <geom name="amazon_box_extra_large_2BB_geom"
+            type="box"
+            size="0.130 0.080 0.085"
+            mass="0.55"
+            material="amazon_box_5"
+            friction="2 0.5 0.01"
+            contype="1"
+            conaffinity="1"
+            condim="3"/>
+    </body>
+
+    <!-- Box 4: upper shelf, left -->
+    <body name="amazon_box_medium_tall_1A9" pos="-0.30 0.45 0.390">
+      <freejoint/>
+      <geom name="amazon_box_medium_tall_1A9_geom"
+            type="box"
+            size="0.100 0.075 0.080"
+            mass="0.45"
+            material="amazon_box_3"
+            friction="2 0.5 0.01"
+            contype="1"
+            conaffinity="1"
+            condim="3"/>
+    </body>
+
+    <!-- Box 5: upper shelf, right -->
+    <body name="amazon_box_large_B0" pos="0.20 0.60 0.815">
+      <freejoint/>
+      <geom name="amazon_box_large_B0_geom"
+            type="box"
+            size="0.120 0.075 0.090"
+            mass="0.50"
+            material="amazon_box_4"
+            friction="2 0.5 0.01"
+            contype="1"
+            conaffinity="1"
+            condim="3"/>
+    </body>
+
+  </worldbody>
+
+  <!-- ========================================================= -->
+  <!-- UR5e ACTUATORS -->
+  <!-- ========================================================= -->
+
+  <actuator>
+    <general class="size3" name="shoulder_pan" joint="shoulder_pan_joint"/>
+    <general class="size3" name="shoulder_lift" joint="shoulder_lift_joint"/>
+    <general class="size3_limited" name="elbow" joint="elbow_joint"/>
+    <general class="size1" name="wrist_1" joint="wrist_1_joint"/>
+    <general class="size1" name="wrist_2" joint="wrist_2_joint"/>
+    <general class="size1" name="wrist_3" joint="wrist_3_joint"/>
+  </actuator>
+
+  <!-- Home pose -->
+  <keyframe>
+    <key name="home"
+         qpos="0 -1.5708 1.5708 -1.5708 -1.5708 0"
+         ctrl="0 -1.5708 1.5708 -1.5708 -1.5708 0"/>
+  </keyframe>
+
+</mujoco>

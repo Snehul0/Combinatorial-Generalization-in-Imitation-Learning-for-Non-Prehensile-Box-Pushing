@@ -1,0 +1,93 @@
+Loading: checkpoints/bc_27d_multi.pt
+BC obs_dim: 27, best val loss: 0.0022778559782721613
+
+Loaded scene: nq=41, nu=6
+
+
+=== IN-DISTRIBUTION ===
+  seed=0 tk=A1 [  ]: best=0.183 | disturb=0.000 [1s]
+  seed=0 tk=A4 [OK]: best=0.050 | disturb=0.000 [2s]
+  seed=1 tk=A1 [  ]: best=0.190 | disturb=0.000 [3s]
+  seed=1 tk=A4 [  ]: best=0.152 | disturb=0.000 [4s]
+  seed=2 tk=A1 [  ]: best=0.237 | disturb=0.000 [5s]
+  seed=2 tk=A4 [  ]: best=0.085 | disturb=0.000 [6s]
+  seed=3 tk=A1 [  ]: best=0.236 | disturb=0.000 [8s]
+  seed=3 tk=A4 [OK]: best=0.063 | disturb=0.000 [9s]
+  seed=4 tk=A1 [  ]: best=0.248 | disturb=0.000 [10s]
+  seed=4 tk=A4 [OK]: best=0.070 | disturb=0.000 [11s]
+  seed=5 tk=A1 [  ]: best=0.216 | disturb=0.000 [12s]
+  seed=5 tk=A4 [  ]: best=0.199 | disturb=0.000 [13s]
+  seed=6 tk=A1 [  ]: best=0.206 | disturb=0.000 [14s]
+  seed=6 tk=A4 [  ]: best=0.091 | disturb=0.000 [15s]
+  seed=7 tk=A1 [  ]: best=0.234 | disturb=0.000 [16s]
+  seed=7 tk=A4 [  ]: best=0.209 | disturb=0.000 [17s]
+  seed=8 tk=A1 [  ]: best=0.202 | disturb=0.000 [18s]
+  seed=8 tk=A4 [  ]: best=0.150 | disturb=0.000 [19s]
+  seed=9 tk=A1 [  ]: best=0.222 | disturb=0.000 [20s]
+  seed=9 tk=A4 [  ]: best=0.100 | disturb=0.000 [21s]
+
+=== STRAIGHT-LINE OOD (original) ===
+
+--- ood_straight_n3 ---
+  seed=0 [  ]: best=0.230 | disturb=0.703 [22s]
+  seed=1 [  ]: best=0.190 | disturb=0.288 [23s]
+  seed=2 [  ]: best=0.216 | disturb=0.379 [24s]
+  seed=3 [  ]: best=0.209 | disturb=0.213 [25s]
+  seed=4 [  ]: best=0.197 | disturb=0.510 [26s]
+
+--- ood_straight_n4 ---
+  seed=0 [  ]: best=0.236 | disturb=1.692 [27s]
+  seed=1 [  ]: best=0.210 | disturb=0.493 [28s]
+  seed=2 [  ]: best=0.219 | disturb=1.412 [29s]
+  seed=3 [  ]: best=0.217 | disturb=1.570 [30s]
+  seed=4 [  ]: best=0.201 | disturb=0.958 [31s]
+
+--- ood_straight_n5 ---
+  seed=0 [  ]: best=0.243 | disturb=2.079 [32s]
+  seed=1 [  ]: best=0.284 | disturb=2.334 [33s]
+  seed=2 [  ]: best=0.238 | disturb=1.293 [34s]
+  seed=3 [  ]: best=0.261 | disturb=1.849 [35s]
+  seed=4 [  ]: best=0.232 | disturb=1.625 [36s]
+
+=== TRAIN-STYLE OOD (matches demo layouts) ===
+
+--- ood_trainstyle_n3 ---
+  seed=500 [  ]: best=0.226 | disturb=0.345 [37s]
+  seed=501 [  ]: best=0.209 | disturb=0.404 [38s]
+  seed=502 [  ]: best=0.242 | disturb=0.467 [39s]
+  seed=503 [  ]: best=0.222 | disturb=0.562 [40s]
+  seed=504 [  ]: best=0.222 | disturb=0.109 [41s]
+
+--- ood_trainstyle_n4 ---
+  seed=500 [  ]: best=0.226 | disturb=0.411 [42s]
+  seed=501 [  ]: best=0.212 | disturb=0.500 [43s]
+  seed=502 [  ]: best=0.247 | disturb=0.743 [44s]
+  seed=503 [  ]: best=0.222 | disturb=0.568 [45s]
+  seed=504 [  ]: best=0.222 | disturb=0.432 [46s]
+
+--- ood_trainstyle_n5 ---
+  seed=500 [  ]: best=0.226 | disturb=1.116 [48s]
+  seed=501 [  ]: best=0.227 | disturb=0.743 [49s]
+  seed=502 [  ]: best=0.246 | disturb=1.272 [50s]
+  seed=503 [  ]: best=0.226 | disturb=0.925 [51s]
+  seed=504 [  ]: best=0.222 | disturb=1.164 [52s]
+
+======================================================================
+SUMMARY: BC-27D-multi
+======================================================================
+
+-- In-distribution (sanity check) --
+in_dist                Generous 3/20 ( 15%)   Real 3/20 ( 15%)   avg_best=0.167m   avg_disturb=0.000m
+
+-- STRAIGHT-LINE OOD (your original eval) --
+ood_straight_n3        Generous 0/5 (  0%)   Real 0/5 (  0%)   avg_best=0.209m   avg_disturb=0.418m
+ood_straight_n4        Generous 0/5 (  0%)   Real 0/5 (  0%)   avg_best=0.217m   avg_disturb=1.225m
+ood_straight_n5        Generous 0/5 (  0%)   Real 0/5 (  0%)   avg_best=0.251m   avg_disturb=1.836m
+
+-- TRAIN-STYLE OOD (matches demo layouts) --
+ood_trainstyle_n3      Generous 0/5 (  0%)   Real 0/5 (  0%)   avg_best=0.224m   avg_disturb=0.378m
+ood_trainstyle_n4      Generous 0/5 (  0%)   Real 0/5 (  0%)   avg_best=0.226m   avg_disturb=0.531m
+ood_trainstyle_n5      Generous 0/5 (  0%)   Real 0/5 (  0%)   avg_best=0.229m   avg_disturb=1.044m
+
+Total time: 0.9 min
+Saved: bc_27d_multi_DUAL_results.json

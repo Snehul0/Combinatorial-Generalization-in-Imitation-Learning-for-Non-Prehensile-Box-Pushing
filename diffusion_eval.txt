@@ -1,0 +1,77 @@
+
+===== ROBOT DEBUG INFO =====
+shoulder_pan_joint        joint_id=0, qpos_id=0, dof_id=0
+shoulder_lift_joint       joint_id=1, qpos_id=1, dof_id=1
+elbow_joint               joint_id=2, qpos_id=2, dof_id=2
+wrist_1_joint             joint_id=3, qpos_id=3, dof_id=3
+wrist_2_joint             joint_id=4, qpos_id=4, dof_id=4
+wrist_3_joint             joint_id=5, qpos_id=5, dof_id=5
+shoulder_pan              actuator_id=0
+shoulder_lift             actuator_id=1
+elbow                     actuator_id=2
+wrist_1                   actuator_id=3
+wrist_2                   actuator_id=4
+wrist_3                   actuator_id=5
+tip_id = 1
+goal_marker_id = 1
+nq = 41 nv = 36 nu = 6
+============================
+
+Diffusion eval: 4 configs per scene, inf_steps=30
+Expected: ~30-45 min
+
+============================================================
+IN-DISTRIBUTION
+============================================================
+  seed=0 tk=A1 [OK]: best=0.029 | (ss=60, es=4) [16s]
+  seed=0 tk=A4 [OK]: best=0.025 | (ss=80, es=6) [34s]
+  seed=1 tk=A1 [  ]: best=0.084 | (ss=100, es=6) [54s]
+  seed=1 tk=A4 [OK]: best=0.008 | (ss=80, es=6) [72s]
+  seed=2 tk=A1 [  ]: best=0.123 | (ss=80, es=6) [89s]
+  seed=2 tk=A4 [OK]: best=0.041 | (ss=80, es=6) [105s]
+  seed=3 tk=A1 [OK]: best=0.065 | (ss=80, es=6) [122s]
+  seed=3 tk=A4 [OK]: best=0.026 | (ss=100, es=6) [138s]
+  seed=4 tk=A1 [OK]: best=0.033 | (ss=80, es=6) [155s]
+  seed=4 tk=A4 [  ]: best=0.113 | (ss=100, es=6) [171s]
+  seed=5 tk=A1 [OK]: best=0.033 | (ss=80, es=6) [187s]
+  seed=5 tk=A4 [OK]: best=0.043 | (ss=80, es=6) [204s]
+  seed=6 tk=A1 [OK]: best=0.059 | (ss=80, es=4) [221s]
+  seed=6 tk=A4 [OK]: best=0.068 | (ss=60, es=4) [237s]
+  seed=7 tk=A1 [OK]: best=0.065 | (ss=80, es=6) [254s]
+  seed=7 tk=A4 [OK]: best=0.038 | (ss=100, es=6) [270s]
+  seed=8 tk=A1 [  ]: best=0.105 | (ss=100, es=6) [287s]
+  seed=8 tk=A4 [OK]: best=0.021 | (ss=80, es=4) [303s]
+  seed=9 tk=A1 [  ]: best=0.100 | (ss=60, es=4) [319s]
+  seed=9 tk=A4 [OK]: best=0.009 | (ss=60, es=4) [335s]
+
+OOD_N3
+  seed=0 [OK]: best=0.043 | disturb=0.980 [352s]
+  seed=1 [OK]: best=0.013 | disturb=1.991 [368s]
+  seed=2 [OK]: best=0.035 | disturb=0.553 [385s]
+  seed=3 [OK]: best=0.023 | disturb=1.041 [402s]
+  seed=4 [OK]: best=0.067 | disturb=1.190 [419s]
+
+OOD_N4
+  seed=0 [  ]: best=0.070 | disturb=2.156 [436s]
+  seed=1 [  ]: best=0.120 | disturb=1.549 [453s]
+  seed=2 [  ]: best=0.104 | disturb=3.481 [469s]
+  seed=3 [  ]: best=0.187 | disturb=10.364 [485s]
+  seed=4 [OK]: best=0.064 | disturb=1.358 [502s]
+
+OOD_N5
+  seed=0 [  ]: best=0.073 | disturb=4.593 [519s]
+  seed=1 [OK]: best=0.027 | disturb=4.201 [537s]
+  seed=2 [OK]: best=0.008 | disturb=3.277 [554s]
+  seed=3 [  ]: best=0.206 | disturb=2.966 [570s]
+  seed=4 [  ]: best=0.082 | disturb=7.867 [587s]
+
+============================================================
+SUMMARY (Diffusion)
+============================================================
+Scene        Generous        Strict          Real           
+in_dist      15/20 (75%)     1/20 (5%)     15/20 (75%)     disturb=0.00m
+ood_n3       5/5 (100%)     0/5 (0%)     0/5 (0%)     disturb=1.15m
+ood_n4       1/5 (20%)     0/5 (0%)     0/5 (0%)     disturb=3.78m
+ood_n5       2/5 (40%)     0/5 (0%)     0/5 (0%)     disturb=4.58m
+
+Total time: 9.8 min

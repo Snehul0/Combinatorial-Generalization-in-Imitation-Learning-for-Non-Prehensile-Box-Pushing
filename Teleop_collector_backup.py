@@ -1,0 +1,953 @@
+"""
+Teleop_collector.py
+===================
+
+Interactive keyboard teleoperation demo collector for UR5e + flat pusher in MuJoCo.
+
+WORKFLOW PER DEMO:
+  1. Launch -> arm moves to home
+  2. TARGET PLACEMENT MODE: arrow keys/Q/Z move target box one step per click, ENTER locks
+  3. GOAL PLACEMENT MODE: arrow keys/Q/Z move goal marker one step per click, ENTER locks
+  4. TELEOP MODE: Cartesian keys move arm/pusher, SPACE saves success
+
+Action format: 6D joint positions
+Observation format: 27D state vector
+"""
+
+import argparse
+import os
+import pickle
+import time
+import numpy as np
+
+import mujoco
+import mujoco.viewer
+
+
+# ============================================================
+# CONFIGURATION
+# ============================================================
+
+HOME_QPOS = np.array([0.0, -1.5708, 1.5708, -1.5708, -1.5708, 0.0])
+
+JOINT_NAMES = [
+    "shoulder_pan_joint",
+    "shoulder_lift_joint",
+    "elbow_joint",
+    "wrist_1_joint",
+    "wrist_2_joint",
+    "wrist_3_joint",
+]
+
+ACTUATOR_NAMES = [
+    "shoulder_pan",
+    "shoulder_lift",
+    "elbow",
+    "wrist_1",
+    "wrist_2",
+    "wrist_3",
+]
+
+BOXES = {
+    "A1":  ("amazon_box_small_A1",        np.array([-0.30, 0.45, 0.346]), np.array([0.080, 0.055, 0.040])),
+    "A4":  ("amazon_box_medium_A4",       np.array([-0.10, 0.45, 0.365]), np.array([0.100, 0.065, 0.055])),
+    "2BB": ("amazon_box_extra_large_2BB", np.array([+0.33, 0.45, 0.395]), np.array([0.130, 0.080, 0.085])),
+    "1A9": ("amazon_box_medium_tall_1A9", np.array([-0.30, 0.45, 0.806]), np.array([0.100, 0.075, 0.080])),
+    "B0":  ("amazon_box_large_B0",        np.array([+0.20, 0.45, 0.400]), np.array([0.120, 0.075, 0.090])),
+}
+
+PARK_POS = np.array([0.0, 0.0, -5.0])
+
+# Placement bounds and step sizes
+PLACE_X_MIN, PLACE_X_MAX = -0.60, +0.60
+PLACE_Y_MIN, PLACE_Y_MAX = +0.25, +0.60
+PLACE_STEP = 0.02
+
+# Backward-compatible names used by old goal placement code
+GOAL_STEP = PLACE_STEP
+GOAL_X_MIN, GOAL_X_MAX = PLACE_X_MIN, PLACE_X_MAX
+GOAL_Y_MIN, GOAL_Y_MAX = PLACE_Y_MIN, PLACE_Y_MAX
+
+# Teleop step sizes
+STEP_XY = 0.020
+STEP_Z = 0.010
+STEP_W = 0.050
+STEP_ORIENT = 0.025
+STEP_JOINT = 0.020
+SIM_STEPS_PER_ACTION = 8
+
+CLIP_XY = 0.030
+CLIP_Z = 0.020
+CLIP_W = 0.100
+
+MODE_CARTESIAN = "CARTESIAN"
+MODE_ORIENTATION = "ORIENTATION"
+MODE_JOINT = "JOINT"
+MODES_ORDER = [MODE_CARTESIAN, MODE_ORIENTATION, MODE_JOINT]
+
+
+# ============================================================
+# ROBOT SCENE
+# ============================================================
+
+class RobotScene:
+    def __init__(self, xml_path):
+        self.model = mujoco.MjModel.from_xml_path(xml_path)
+        self.data = mujoco.MjData(self.model)
+
+        self.joint_ids = [
+            mujoco.mj_name2id(self.model, mujoco.mjtObj.mjOBJ_JOINT, name)
+            for name in JOINT_NAMES
+        ]
+        self.qpos_ids = [self.model.jnt_qposadr[jid] for jid in self.joint_ids]
+        self.dof_ids = [self.model.jnt_dofadr[jid] for jid in self.joint_ids]
+        self.act_ids = [
+            mujoco.mj_name2id(self.model, mujoco.mjtObj.mjOBJ_ACTUATOR, name)
+            for name in ACTUATOR_NAMES
+        ]
+        self.tip_id = mujoco.mj_name2id(
+            self.model, mujoco.mjtObj.mjOBJ_SITE, "pusher_tip_site"
+        )
+        self.goal_marker_id = mujoco.mj_name2id(
+            self.model, mujoco.mjtObj.mjOBJ_GEOM, "goal_marker"
+        )
+
+        print("\n===== ROBOT DEBUG INFO =====")
+        for name, jid, qid, did in zip(JOINT_NAMES, self.joint_ids, self.qpos_ids, self.dof_ids):
+            print(f"{name:25s} joint_id={jid}, qpos_id={qid}, dof_id={did}")
+        for name, aid in zip(ACTUATOR_NAMES, self.act_ids):
+            print(f"{name:25s} actuator_id={aid}")
+        print("tip_id =", self.tip_id)
+        print("goal_marker_id =", self.goal_marker_id)
+        print("nq =", self.model.nq, "nv =", self.model.nv, "nu =", self.model.nu)
+        print("============================\n")
+
+    def set_robot_q(self, data, q):
+        """Directly set UR5e robot joint positions and zero robot velocities."""
+        for i, qid in enumerate(self.qpos_ids):
+            data.qpos[qid] = q[i]
+
+        for dof in self.dof_ids:
+            data.qvel[dof] = 0.0
+
+        for i, aid in enumerate(self.act_ids):
+            if aid >= 0:
+                data.ctrl[aid] = q[i]
+
+        mujoco.mj_forward(self.model, data)
+
+    def get_robot_q(self, data):
+        return np.array([data.qpos[qid] for qid in self.qpos_ids])
+
+    def set_ctrl_q(self, data, q):
+        for i, aid in enumerate(self.act_ids):
+            if aid >= 0:
+                data.ctrl[aid] = q[i]
+
+    def get_tip(self, data):
+        return data.site_xpos[self.tip_id].copy()
+
+    def body_id(self, box_key):
+        body_name = BOXES[box_key][0]
+        return mujoco.mj_name2id(self.model, mujoco.mjtObj.mjOBJ_BODY, body_name)
+
+    def get_box_pos(self, data, box_key):
+        return data.xpos[self.body_id(box_key)].copy()
+
+    def set_goal_marker(self, goal):
+        if self.goal_marker_id != -1:
+            self.model.geom_pos[self.goal_marker_id, 0] = goal[0]
+            self.model.geom_pos[self.goal_marker_id, 1] = goal[1]
+            self.model.geom_pos[self.goal_marker_id, 2] = goal[2]
+            mujoco.mj_forward(self.model, self.data)
+
+    def set_box_qpos(self, data, box_key, pos):
+        """Directly place a box at pos = [x, y, z]."""
+        bid = self.body_id(box_key)
+        if bid < 0:
+            return
+
+        jid = self.model.body_jntadr[bid]
+        if jid < 0:
+            return
+
+        qadr = self.model.jnt_qposadr[jid]
+        vadr = self.model.jnt_dofadr[jid]
+
+        data.qpos[qadr:qadr + 3] = pos
+        data.qpos[qadr + 3:qadr + 7] = [1, 0, 0, 0]
+        data.qvel[vadr:vadr + 6] = 0.0
+
+        mujoco.mj_forward(self.model, data)
+
+
+# ============================================================
+# SCENE SETUP AND OBSERVATION
+# ============================================================
+
+def setup_initial_scene(target_key, blockers, jitter_seed=None):
+    """Create initial scene dictionary. Target is still manually placed later."""
+    target_pos = BOXES[target_key][1].copy()
+    if jitter_seed is not None:
+        rng = np.random.default_rng(jitter_seed)
+        target_pos[0] += float(rng.uniform(-0.05, 0.05))
+        target_pos[1] += float(rng.uniform(-0.03, 0.03))
+
+    scene_boxes = {target_key: target_pos.copy()}
+
+    for blocker_key in blockers:
+        if blocker_key == target_key:
+            continue
+        blocker_pos = BOXES[blocker_key][1].copy()
+        if jitter_seed is not None:
+            rng = np.random.default_rng(jitter_seed + 100)
+            blocker_pos[0] += float(rng.uniform(-0.05, 0.05))
+            blocker_pos[1] += float(rng.uniform(-0.03, 0.03))
+        scene_boxes[blocker_key] = blocker_pos
+
+    return scene_boxes
+
+
+def setup_scene(rs, scene_boxes, goal):
+    model = rs.model
+    data = rs.data
+    mujoco.mj_resetData(model, data)
+
+    # Put robot at home and park boxes not in scene.
+    rs.set_robot_q(data, HOME_QPOS)
+
+    for key, (body_name, _, _) in BOXES.items():
+        bid = mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_BODY, body_name)
+        if bid < 0:
+            continue
+        jid = model.body_jntadr[bid]
+        if jid < 0:
+            continue
+        qadr = model.jnt_qposadr[jid]
+        vadr = model.jnt_dofadr[jid]
+        pos = scene_boxes[key] if key in scene_boxes else PARK_POS
+        data.qpos[qadr:qadr + 3] = pos
+        data.qpos[qadr + 3:qadr + 7] = [1, 0, 0, 0]
+        data.qvel[vadr:vadr + 6] = 0.0
+
+    rs.set_goal_marker(goal)
+    rs.set_robot_q(data, HOME_QPOS)
+    mujoco.mj_forward(model, data)
+
+
+def get_obs(rs, data, target_key, goal):
+    """27D observation."""
+    model = rs.model
+    box_name = BOXES[target_key][0]
+    box_id = mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_BODY, box_name)
+
+    qpos = rs.get_robot_q(data).copy()
+    qvel = np.array([data.qvel[dof] for dof in rs.dof_ids])
+    tip = rs.get_tip(data)
+    box = data.xpos[box_id].copy()
+
+    vel6 = np.zeros(6)
+    mujoco.mj_objectVelocity(model, data, mujoco.mjtObj.mjOBJ_BODY, box_id, vel6, 0)
+    box_linvel = vel6[3:].copy()
+
+    return np.concatenate(
+        [qpos, qvel, tip, box, box_linvel, goal, goal - box],
+        dtype=np.float32,
+    )
+
+
+def get_disturbance(rs, data, scene_boxes, target_key):
+    total = 0.0
+    for key, start_pos in scene_boxes.items():
+        if key == target_key:
+            continue
+        bid = rs.body_id(key)
+        if bid >= 0:
+            total += float(np.linalg.norm(data.xpos[bid] - start_pos))
+    return total
+
+
+def contact_info(rs, data, target_key):
+    target_geom = BOXES[target_key][0] + "_geom"
+    has_target_contact = False
+    has_bad_contact = False
+    for i in range(data.ncon):
+        c = data.contact[i]
+        g1 = mujoco.mj_id2name(rs.model, mujoco.mjtObj.mjOBJ_GEOM, c.geom1) or ""
+        g2 = mujoco.mj_id2name(rs.model, mujoco.mjtObj.mjOBJ_GEOM, c.geom2) or ""
+        pair = f"{g1} {g2}"
+        if ("pusher" in pair or "ee_pusher" in pair) and target_geom in pair:
+            has_target_contact = True
+        if ("pusher" in pair or "wrist" in pair or "forearm" in pair or "upperarm" in pair) and \
+                ("shelf" in pair or "beam" in pair or "wall" in pair or "floor" in pair):
+            has_bad_contact = True
+    return has_target_contact, has_bad_contact
+
+
+# ============================================================
+# KEYBOARD STATE
+# ============================================================
+
+class KeyboardState:
+    def __init__(self):
+        self.keys_held = set()
+        self.place_nudge = np.zeros(3, dtype=float)
+        self.signals = {
+            'success': False,
+            'cancel': False,
+            'pause': False,
+            'quit': False,
+            'mode_switch': False,
+            'reset_orientation': False,
+            'lock_placement': False,
+        }
+        self.mode_index = 0
+        self.selected_joint = 0
+        self.in_placement = True
+
+    @property
+    def mode(self):
+        return MODES_ORDER[self.mode_index]
+
+    def on_key(self, keycode):
+        # ENTER locks target/goal placement.
+        if keycode == 257:
+            self.signals['lock_placement'] = True
+            return
+
+        # ESC quits.
+        if keycode == 256:
+            self.signals['quit'] = True
+            return
+
+        # Placement mode: one key press = one step.
+        if self.in_placement:
+            if keycode == 265:        # Arrow Up: +X
+                self.place_nudge[0] += PLACE_STEP
+            elif keycode == 264:      # Arrow Down: -X
+                self.place_nudge[0] -= PLACE_STEP
+            elif keycode == 262:      # Arrow Right: +Y
+                self.place_nudge[1] += PLACE_STEP
+            elif keycode == 263:      # Arrow Left: -Y
+                self.place_nudge[1] -= PLACE_STEP
+            elif keycode == ord('Q'):
+                self.place_nudge[2] += PLACE_STEP / 2
+            elif keycode == ord('Z'):
+                self.place_nudge[2] -= PLACE_STEP / 2
+            return
+
+        # Teleop mode.
+        if keycode in (ord('D'), 262):
+            self._press_once('right')
+        if keycode in (ord('A'), 263):
+            self._press_once('left')
+        if keycode in (ord('S'), 264):
+            self._press_once('back')
+        if keycode in (ord('W'), 265):
+            self._press_once('forward')
+        if keycode == ord('Q'):
+            self._press_once('up')
+        if keycode == ord('Z'):
+            self._press_once('down')
+        if keycode == ord('R'):
+            self._press_once('wrist+')
+        if keycode == ord('F'):
+            self._press_once('wrist-')
+        if keycode == ord('I'):
+            self._press_once('pitch+')
+        if keycode == ord('K'):
+            self._press_once('pitch-')
+        if keycode == ord('J'):
+            self._press_once('yaw+')
+        if keycode == ord('L'):
+            self._press_once('yaw-')
+        if keycode == ord('U'):
+            self._press_once('roll+')
+        if keycode == ord('O'):
+            self._press_once('roll-')
+
+        if ord('1') <= keycode <= ord('6'):
+            self.selected_joint = keycode - ord('1')
+            print(f"\n  [JOINT] selected joint {self.selected_joint + 1}: {JOINT_NAMES[self.selected_joint]}")
+
+        if keycode == ord('N'):
+            self._press_once('joint-')
+        if keycode == ord('M'):
+            self._press_once('joint+')
+        if keycode == 32:
+            self.signals['success'] = True
+        if keycode == ord('X'):
+            self.signals['cancel'] = True
+        if keycode == ord('P'):
+            self.signals['pause'] = not self.signals['pause']
+
+        if keycode == 258:  # TAB
+            self.mode_index = (self.mode_index + 1) % len(MODES_ORDER)
+            self.keys_held.clear()
+            self.signals['mode_switch'] = True
+
+        if keycode == ord('B'):
+            self.signals['reset_orientation'] = True
+
+    def _press_once(self, key):
+        self.keys_held.clear()
+        self.keys_held.add(key)
+
+    def placement_delta(self):
+        dx, dy, dz = self.place_nudge.copy()
+        self.place_nudge[:] = 0.0
+        return dx, dy, dz
+
+    # Backward-compatible name.
+    def goal_delta(self):
+        return self.placement_delta()
+
+    def cartesian_delta(self):
+        dx = dy = dz = dw = 0.0
+        if 'forward' in self.keys_held:
+            dx += STEP_XY
+        if 'back' in self.keys_held:
+            dx -= STEP_XY
+        if 'right' in self.keys_held:
+            dy += STEP_XY
+        if 'left' in self.keys_held:
+            dy -= STEP_XY
+        if 'up' in self.keys_held:
+            dz += STEP_Z
+        if 'down' in self.keys_held:
+            dz -= STEP_Z
+        if 'wrist+' in self.keys_held:
+            dw += STEP_W
+        if 'wrist-' in self.keys_held:
+            dw -= STEP_W
+        return dx, dy, dz, dw
+
+    def orientation_delta(self):
+        droll = dpitch = dyaw = 0.0
+        if 'pitch+' in self.keys_held:
+            dpitch += STEP_ORIENT
+        if 'pitch-' in self.keys_held:
+            dpitch -= STEP_ORIENT
+        if 'yaw+' in self.keys_held:
+            dyaw += STEP_ORIENT
+        if 'yaw-' in self.keys_held:
+            dyaw -= STEP_ORIENT
+        if 'roll+' in self.keys_held:
+            droll += STEP_ORIENT
+        if 'roll-' in self.keys_held:
+            droll -= STEP_ORIENT
+        return droll, dpitch, dyaw
+
+    def joint_delta(self):
+        dq = 0.0
+        if 'joint+' in self.keys_held:
+            dq += STEP_JOINT
+        if 'joint-' in self.keys_held:
+            dq -= STEP_JOINT
+        return self.selected_joint, dq
+
+
+# ============================================================
+# CONTROL APPLICATION
+# ============================================================
+
+def apply_cartesian(rs, dx, dy, dz, dw, sim_steps=SIM_STEPS_PER_ACTION):
+    model = rs.model
+    data = rs.data
+
+    desired_tip = rs.get_tip(data).copy()
+    desired_tip[0] += dx
+    desired_tip[1] += dy
+    desired_tip[2] += dz
+
+    tip = rs.get_tip(data)
+    err = desired_tip - tip
+
+    jacp = np.zeros((3, model.nv))
+    jacr = np.zeros((3, model.nv))
+    mujoco.mj_jacSite(model, data, jacp, jacr, rs.tip_id)
+
+    J = jacp[:, rs.dof_ids]
+    dq = J.T @ np.linalg.solve(J @ J.T + 1e-4 * np.eye(3), err)
+
+    q = rs.get_robot_q(data)
+    q_new = q + 0.8 * dq
+    q_new[5] += dw
+    q_new = np.clip(q_new, -6.2, 6.2)
+
+    rs.set_robot_q(data, q_new)
+    mujoco.mj_forward(model, data)
+
+
+def apply_orientation(rs, droll, dpitch, dyaw, sim_steps=SIM_STEPS_PER_ACTION):
+    model = rs.model
+    data = rs.data
+
+    tip_target = rs.get_tip(data).copy()
+    omega = np.array([droll, dpitch, dyaw])
+
+    tip = rs.get_tip(data)
+    pos_err = tip_target - tip
+
+    jacp = np.zeros((3, model.nv))
+    jacr = np.zeros((3, model.nv))
+    mujoco.mj_jacSite(model, data, jacp, jacr, rs.tip_id)
+
+    Jp = jacp[:, rs.dof_ids]
+    Jr = jacr[:, rs.dof_ids]
+    J_full = np.vstack([Jp, Jr])
+
+    v_desired = np.concatenate([pos_err * 5.0, omega])
+    dq = J_full.T @ np.linalg.solve(J_full @ J_full.T + 1e-3 * np.eye(6), v_desired)
+
+    q = rs.get_robot_q(data)
+    q_new = q + 0.5 * dq
+    q_new = np.clip(q_new, -6.2, 6.2)
+
+    rs.set_robot_q(data, q_new)
+    mujoco.mj_forward(model, data)
+
+
+def apply_joint(rs, joint_idx, delta, sim_steps=SIM_STEPS_PER_ACTION):
+    model = rs.model
+    data = rs.data
+
+    q = rs.get_robot_q(data)
+    q_new = q.copy()
+    q_new[joint_idx] += delta
+    q_new = np.clip(q_new, -6.2, 6.2)
+
+    rs.set_robot_q(data, q_new)
+    mujoco.mj_forward(model, data)
+
+
+def move_to_home(rs, render_cb=None, steps=200):
+    data = rs.data
+    model = rs.model
+
+    q_start = rs.get_robot_q(data)
+    q_target = HOME_QPOS.copy()
+
+    for k in range(steps):
+        alpha = k / max(steps - 1, 1)
+        alpha_smooth = 3 * alpha**2 - 2 * alpha**3
+        q_cmd = (1.0 - alpha_smooth) * q_start + alpha_smooth * q_target
+        rs.set_robot_q(data, q_cmd)
+        mujoco.mj_forward(model, data)
+        if render_cb:
+            render_cb()
+
+
+def hold_robot_pose(rs):
+    q = rs.get_robot_q(rs.data)
+    rs.set_robot_q(rs.data, q)
+    mujoco.mj_forward(rs.model, rs.data)
+
+
+# ============================================================
+# PLACEMENT CONTROLS AND FUNCTIONS
+# ============================================================
+
+def print_target_controls(target_key):
+    print()
+    print("=" * 70)
+    print(f"STEP 1: PLACE TARGET BOX ({target_key})")
+    print("=" * 70)
+    print("Use arrow keys to move the target box.")
+    print("  ↑  Move box +X")
+    print("  ↓  Move box -X")
+    print("  →  Move box +Y")
+    print("  ←  Move box -Y")
+    print("  Q  Raise box Z")
+    print("  Z  Lower box Z")
+    print("  ENTER  Lock target box position")
+    print("  ESC    Quit without saving")
+    print("One key press = one small step.")
+    print("=" * 70)
+    print()
+
+
+def print_goal_controls():
+    print()
+    print("=" * 70)
+    print("STEP 2: PLACE THE GOAL")
+    print("=" * 70)
+    print("Use arrow keys to move the green goal marker.")
+    print("  ↑  Move goal +X")
+    print("  ↓  Move goal -X")
+    print("  →  Move goal +Y")
+    print("  ←  Move goal -Y")
+    print("  Q  Raise goal Z")
+    print("  Z  Lower goal Z")
+    print("  ENTER  Lock goal position")
+    print("  ESC    Quit without saving")
+    print("One key press = one small step.")
+    print("=" * 70)
+    print()
+
+
+def print_teleop_controls():
+    print()
+    print("=" * 70)
+    print("STEP 3: PUSH THE TARGET BOX TO THE GOAL")
+    print("=" * 70)
+    print("MODE: TAB cycles  CARTESIAN -> ORIENTATION -> JOINT")
+    print("CARTESIAN:                ORIENTATION:           JOINT:")
+    print("  W/S  forward/back         I/K  pitch +/-         1-6  select joint")
+    print("  A/D  left/right           J/L  yaw +/-           M    increase")
+    print("  Q/Z  up/down              U/O  roll +/-          N    decrease")
+    print("  R/F  wrist3 +/-           B    reset wrist")
+    print("SAVE/QUIT:")
+    print("  SPACE  save as success    X     cancel (no save)")
+    print("  P      pause/resume       ESC   quit (no save)")
+    print("=" * 70)
+    print()
+
+
+def place_target_interactive(rs, target_key, viewer, keyboard):
+    target_z = BOXES[target_key][1][2]
+    pos = BOXES[target_key][1].copy()
+
+    print_target_controls(target_key)
+    print(f"Initial target placement: {np.round(pos, 3)}")
+
+    keyboard.signals['lock_placement'] = False
+    keyboard.in_placement = True
+    keyboard.keys_held.clear()
+    keyboard.place_nudge[:] = 0.0
+
+    while not keyboard.signals['lock_placement']:
+        if keyboard.signals['quit']:
+            return None
+
+        dx, dy, dz = keyboard.placement_delta()
+        if abs(dx) + abs(dy) + abs(dz) > 0:
+            pos[0] += dx
+            pos[1] += dy
+            pos[2] += dz
+
+            pos[0] = float(np.clip(pos[0], PLACE_X_MIN, PLACE_X_MAX))
+            pos[1] = float(np.clip(pos[1], PLACE_Y_MIN, PLACE_Y_MAX))
+            pos[2] = float(np.clip(pos[2], target_z - 0.01, target_z + 0.01))
+
+            rs.set_box_qpos(rs.data, target_key, pos)
+
+            print(
+                f"\r  TARGET {target_key}: ({pos[0]:+.3f}, {pos[1]:+.3f}, {pos[2]:+.3f}) [ENTER to lock]    ",
+                end="",
+                flush=True,
+            )
+
+            keyboard.keys_held.clear()
+            keyboard.place_nudge[:] = 0.0
+
+        hold_robot_pose(rs)
+        viewer.sync()
+        time.sleep(0.05)
+
+    print()
+    print(f"\n  Target locked at {np.round(pos, 3)}")
+
+    keyboard.signals['lock_placement'] = False
+    keyboard.keys_held.clear()
+    keyboard.place_nudge[:] = 0.0
+
+    return pos
+
+
+def place_goal_interactive(rs, scene_boxes, target_key, viewer, keyboard):
+    target_pos = rs.get_box_pos(rs.data, target_key)
+    goal = target_pos.copy()
+    goal[0] += 0.25
+
+    print_goal_controls()
+    print(f"Initial goal placement: {np.round(goal, 3)}")
+
+    keyboard.signals['lock_placement'] = False
+    keyboard.in_placement = True
+    keyboard.keys_held.clear()
+    keyboard.place_nudge[:] = 0.0
+
+    while not keyboard.signals['lock_placement']:
+        if keyboard.signals['quit']:
+            return None
+
+        dx, dy, dz = keyboard.placement_delta()
+        if abs(dx) + abs(dy) + abs(dz) > 0:
+            goal[0] += dx
+            goal[1] += dy
+            goal[2] += dz
+
+            goal[0] = float(np.clip(goal[0], PLACE_X_MIN, PLACE_X_MAX))
+            goal[1] = float(np.clip(goal[1], PLACE_Y_MIN, PLACE_Y_MAX))
+            goal[2] = float(np.clip(goal[2], 0.30, 0.50))
+
+            rs.set_goal_marker(goal)
+            mujoco.mj_forward(rs.model, rs.data)
+
+            print(
+                f"\r  GOAL: ({goal[0]:+.3f}, {goal[1]:+.3f}, {goal[2]:+.3f}) [ENTER to lock]    ",
+                end="",
+                flush=True,
+            )
+
+            keyboard.keys_held.clear()
+            keyboard.place_nudge[:] = 0.0
+
+        hold_robot_pose(rs)
+        viewer.sync()
+        time.sleep(0.05)
+
+    print()
+    print(f"\n  Goal locked at {np.round(goal, 3)}")
+
+    keyboard.signals['lock_placement'] = False
+    keyboard.in_placement = False
+    keyboard.keys_held.clear()
+    keyboard.place_nudge[:] = 0.0
+
+    return goal
+
+
+# ============================================================
+# TELEOP DEMO COLLECTION
+# ============================================================
+
+def collect_demo(rs, scene_boxes, target_key, max_steps=3000):
+    temp_goal = BOXES[target_key][1].copy()
+    temp_goal[0] += 0.20
+    setup_scene(rs, scene_boxes, temp_goal)
+
+    keyboard = KeyboardState()
+
+    print()
+    print("=" * 70)
+    print("TELEOPERATION DEMO")
+    print("=" * 70)
+    print(f"  Target:      {target_key}")
+    print(f"  Scene boxes: {list(scene_boxes.keys())}")
+
+    obs_list = []
+    act_list = []
+    rew_list = []
+    done_list = []
+    mode_list = []
+    goal = None
+
+    with mujoco.viewer.launch_passive(
+        rs.model, rs.data, key_callback=keyboard.on_key,
+    ) as viewer:
+        print("\nMoving to home position...")
+        move_to_home(rs, render_cb=viewer.sync, steps=200)
+        time.sleep(0.5)
+
+        # STEP 1: Target placement
+        target_pos = place_target_interactive(rs, target_key, viewer, keyboard)
+        if target_pos is None:
+            print("\n  [QUIT during target placement]")
+            return None
+
+        scene_boxes[target_key] = target_pos.copy()
+        hold_robot_pose(rs)
+        viewer.sync()
+
+        # STEP 2: Goal placement
+        goal = place_goal_interactive(rs, scene_boxes, target_key, viewer, keyboard)
+        if goal is None:
+            print("\n  [QUIT during goal placement]")
+            return None
+
+        hold_robot_pose(rs)
+        viewer.sync()
+
+        # STEP 3: Teleop
+        keyboard.in_placement = False
+        print_teleop_controls()
+        print(f"Ready. Mode: {keyboard.mode}\n")
+
+        step_count = 0
+        start_time = time.time()
+
+        while step_count < max_steps:
+            if keyboard.signals['quit']:
+                print("\n  [QUIT]")
+                return None
+            if keyboard.signals['cancel']:
+                print("\n  [CANCEL]")
+                return None
+            if keyboard.signals['success']:
+                print(f"\n  [SUCCESS] step {step_count}")
+                obs = get_obs(rs, rs.data, target_key, goal)
+                obs_list.append(obs)
+                act_list.append(rs.get_robot_q(rs.data).astype(np.float32))
+                rew_list.append(np.float32(0.0))
+                done_list.append(np.float32(True))
+                mode_list.append(keyboard.mode)
+                break
+            if keyboard.signals['mode_switch']:
+                print(f"\n  [MODE] -> {keyboard.mode}" + " " * 40)
+                keyboard.signals['mode_switch'] = False
+            if keyboard.signals['reset_orientation']:
+                print("\n  [RESET wrist]" + " " * 30)
+                q = rs.get_robot_q(rs.data).copy()
+                q_target = q.copy()
+                q_target[3:6] = HOME_QPOS[3:6]
+                for _ in range(20):
+                    q_interp = 0.9 * rs.get_robot_q(rs.data) + 0.1 * q_target
+                    rs.set_robot_q(rs.data, q_interp)
+                    viewer.sync()
+                keyboard.signals['reset_orientation'] = False
+                continue
+            if keyboard.signals['pause']:
+                hold_robot_pose(rs)
+                viewer.sync()
+                time.sleep(0.05)
+                continue
+
+            obs = get_obs(rs, rs.data, target_key, goal)
+            obs_list.append(obs)
+
+            mode = keyboard.mode
+            if mode == MODE_CARTESIAN:
+                dx, dy, dz, dw = keyboard.cartesian_delta()
+                dx = float(np.clip(dx, -CLIP_XY, CLIP_XY))
+                dy = float(np.clip(dy, -CLIP_XY, CLIP_XY))
+                dz = float(np.clip(dz, -CLIP_Z, CLIP_Z))
+                dw = float(np.clip(dw, -CLIP_W, CLIP_W))
+
+                if abs(dx) + abs(dy) + abs(dz) + abs(dw) > 0:
+                    apply_cartesian(rs, dx, dy, dz, dw)
+                    keyboard.keys_held.clear()
+                else:
+                    hold_robot_pose(rs)
+
+            elif mode == MODE_ORIENTATION:
+                droll, dpitch, dyaw = keyboard.orientation_delta()
+                if abs(droll) + abs(dpitch) + abs(dyaw) > 0:
+                    apply_orientation(rs, droll, dpitch, dyaw)
+                    keyboard.keys_held.clear()
+                else:
+                    hold_robot_pose(rs)
+
+            elif mode == MODE_JOINT:
+                joint_idx, delta = keyboard.joint_delta()
+                if abs(delta) > 0:
+                    apply_joint(rs, joint_idx, delta)
+                    keyboard.keys_held.clear()
+                else:
+                    hold_robot_pose(rs)
+
+            current_q = rs.get_robot_q(rs.data).astype(np.float32)
+            act_list.append(current_q)
+            rew_list.append(np.float32(0.0))
+            done_list.append(np.float32(False))
+            mode_list.append(mode)
+
+            box = rs.get_box_pos(rs.data, target_key)
+            box_to_goal = float(np.linalg.norm(box[:2] - goal[:2]))
+            has_contact, bad_contact = contact_info(rs, rs.data, target_key)
+            disturbance = get_disturbance(rs, rs.data, scene_boxes, target_key)
+
+            if step_count % 5 == 0:
+                elapsed = time.time() - start_time
+                mode_str = mode[:4]
+                extra = f" J{keyboard.selected_joint + 1}" if mode == MODE_JOINT else ""
+                print(
+                    f"\r  step {step_count:4d} | {elapsed:5.1f}s | [{mode_str}{extra}] | "
+                    f"box->goal {box_to_goal:.3f} | "
+                    f"contact {'Y' if has_contact else '.'} | "
+                    f"bad {'Y' if bad_contact else '.'} | "
+                    f"dist {disturbance:.3f}    ",
+                    end='',
+                    flush=True,
+                )
+
+            viewer.sync()
+            time.sleep(0.02)
+            step_count += 1
+        else:
+            print(f"\n  [TIMEOUT at {max_steps} steps]")
+
+    print(f"\n  Steps: {step_count}, Recorded obs: {len(obs_list)}")
+
+    success = bool(keyboard.signals['success'])
+    final_box = rs.get_box_pos(rs.data, target_key)
+    final_dist = float(np.linalg.norm(final_box[:2] - goal[:2]))
+    disturbance = get_disturbance(rs, rs.data, scene_boxes, target_key)
+
+    return {
+        "observations": np.stack(obs_list),
+        "actions": np.stack(act_list),
+        "rewards": np.array(rew_list, dtype=np.float32),
+        "dones": np.array(done_list, dtype=np.float32),
+        "modes": mode_list,
+        "info": {
+            "target_box": target_key,
+            "scene_boxes": {k: v.tolist() for k, v in scene_boxes.items()},
+            "goal": goal.tolist(),
+            "success": success,
+            "final_dist": final_dist,
+            "disturbance": disturbance,
+            "demo_length": len(obs_list),
+            "collection_method": "keyboard_teleop_interactive_target_and_goal",
+            "obs_dim": 27,
+            "act_dim": 6,
+            "act_format": "joint_position",
+        },
+    }
+
+
+def save_demo(demo, out_dir, filename):
+    os.makedirs(out_dir, exist_ok=True)
+    pkl_path = os.path.join(out_dir, f"{filename}.pkl")
+    npz_path = os.path.join(out_dir, f"{filename}.npz")
+    with open(pkl_path, "wb") as f:
+        pickle.dump(demo, f)
+    np.savez_compressed(
+        npz_path,
+        observations=demo["observations"],
+        actions=demo["actions"],
+        rewards=demo["rewards"],
+        dones=demo["dones"],
+    )
+    print("\nSaved:")
+    print(f"  {pkl_path}")
+    print(f"  {npz_path}")
+    print(f"  obs:     {demo['observations'].shape}")
+    print(f"  act:     {demo['actions'].shape} (6D joint positions)")
+    print(f"  success: {demo['info']['success']}")
+    print(f"  dist:    {demo['info']['final_dist']:.4f}")
+    print(f"  disturb: {demo['info']['disturbance']:.4f}")
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--xml", required=True)
+    parser.add_argument("--target", required=True, choices=list(BOXES.keys()))
+    parser.add_argument("--blockers", nargs="*", default=[], choices=list(BOXES.keys()))
+    parser.add_argument("--jitter_seed", type=int, default=None,
+                        help="If set, randomize box positions slightly before manual placement")
+    parser.add_argument("--out_dir", default="demonstrations_teleop")
+    parser.add_argument("--max_steps", type=int, default=10000)
+    parser.add_argument("--name", required=True,
+                        help="Filename for the saved demo, e.g. demo_001")
+    args = parser.parse_args()
+
+    rs = RobotScene(args.xml)
+    print(f"\nTarget:   {args.target}")
+    print(f"Blockers: {args.blockers if args.blockers else 'none'}")
+    if args.jitter_seed is not None:
+        print(f"Jitter:   seed={args.jitter_seed}")
+
+    scene_boxes = setup_initial_scene(args.target, args.blockers, args.jitter_seed)
+    demo = collect_demo(rs, scene_boxes, args.target, max_steps=args.max_steps)
+
+    if demo is None:
+        print("\nDemo canceled.")
+        return
+
+    save_demo(demo, args.out_dir, args.name)
+
+
+if __name__ == "__main__":
+    main()

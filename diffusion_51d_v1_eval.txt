@@ -1,0 +1,89 @@
+Loading: checkpoints/diffusion_51d_multi_v1.pt
+Diffusion obs_dim: 51, val_noise_loss: 0.031975499311693356
+
+Loaded scene: nq=41, nu=6
+
+
+=== IN-DISTRIBUTION ===
+  seed=0 tk=A1 [  ]: best=0.183 | disturb=0.000 [5s]
+  seed=0 tk=A4 [  ]: best=0.183 | disturb=0.000 [10s]
+  seed=1 tk=A1 [  ]: best=0.190 | disturb=0.000 [15s]
+  seed=1 tk=A4 [  ]: best=0.190 | disturb=0.000 [20s]
+  seed=2 tk=A1 [  ]: best=0.237 | disturb=0.000 [26s]
+  seed=2 tk=A4 [  ]: best=0.237 | disturb=0.000 [31s]
+  seed=3 tk=A1 [  ]: best=0.236 | disturb=0.000 [36s]
+  seed=3 tk=A4 [  ]: best=0.236 | disturb=0.000 [41s]
+  seed=4 tk=A1 [  ]: best=0.235 | disturb=0.000 [46s]
+  seed=4 tk=A4 [  ]: best=0.248 | disturb=0.000 [52s]
+  seed=5 tk=A1 [  ]: best=0.216 | disturb=0.000 [57s]
+  seed=5 tk=A4 [  ]: best=0.216 | disturb=0.000 [63s]
+  seed=6 tk=A1 [  ]: best=0.206 | disturb=0.000 [68s]
+  seed=6 tk=A4 [  ]: best=0.206 | disturb=0.000 [74s]
+  seed=7 tk=A1 [  ]: best=0.234 | disturb=0.000 [79s]
+  seed=7 tk=A4 [  ]: best=0.234 | disturb=0.000 [85s]
+  seed=8 tk=A1 [  ]: best=0.202 | disturb=0.000 [90s]
+  seed=8 tk=A4 [  ]: best=0.202 | disturb=0.000 [96s]
+  seed=9 tk=A1 [  ]: best=0.222 | disturb=0.000 [101s]
+  seed=9 tk=A4 [  ]: best=0.222 | disturb=0.000 [107s]
+
+=== OOD_STRAIGHT_N3 ===
+  seed=0 [  ]: best=0.230 | disturb=0.770 [112s]
+  seed=1 [  ]: best=0.140 | disturb=0.464 [118s]
+  seed=2 [  ]: best=0.216 | disturb=0.503 [124s]
+  seed=3 [  ]: best=0.209 | disturb=0.247 [129s]
+  seed=4 [OK]: best=0.062 | disturb=0.596 [135s]
+
+=== OOD_STRAIGHT_N4 ===
+  seed=0 [  ]: best=0.236 | disturb=1.691 [141s]
+  seed=1 [OK]: best=0.032 | disturb=0.922 [146s]
+  seed=2 [  ]: best=0.122 | disturb=1.633 [152s]
+  seed=3 [  ]: best=0.119 | disturb=1.638 [158s]
+  seed=4 [OK]: best=0.054 | disturb=1.390 [163s]
+
+=== OOD_STRAIGHT_N5 ===
+  seed=0 [  ]: best=0.243 | disturb=2.072 [169s]
+  seed=1 [  ]: best=0.284 | disturb=2.316 [174s]
+  seed=2 [  ]: best=0.146 | disturb=1.959 [180s]
+  seed=3 [OK]: best=0.033 | disturb=1.993 [186s]
+  seed=4 [  ]: best=0.232 | disturb=1.625 [192s]
+
+=== OOD_TRAINSTYLE_N3 ===
+  seed=500 [  ]: best=0.151 | disturb=0.340 [197s]
+  seed=501 [  ]: best=0.177 | disturb=0.326 [203s]
+  seed=502 [  ]: best=0.236 | disturb=0.583 [208s]
+  seed=503 [  ]: best=0.192 | disturb=0.694 [214s]
+  seed=504 [  ]: best=0.222 | disturb=0.110 [219s]
+
+=== OOD_TRAINSTYLE_N4 ===
+  seed=500 [OK]: best=0.025 | disturb=0.536 [225s]
+  seed=501 [  ]: best=0.148 | disturb=0.618 [231s]
+  seed=502 [  ]: best=0.082 | disturb=0.909 [236s]
+  seed=503 [  ]: best=0.222 | disturb=0.568 [242s]
+  seed=504 [  ]: best=0.202 | disturb=0.882 [247s]
+
+=== OOD_TRAINSTYLE_N5 ===
+  seed=500 [  ]: best=0.224 | disturb=1.820 [253s]
+  seed=501 [  ]: best=0.178 | disturb=1.764 [259s]
+  seed=502 [  ]: best=0.246 | disturb=1.611 [265s]
+  seed=503 [  ]: best=0.155 | disturb=1.157 [270s]
+  seed=504 [  ]: best=0.102 | disturb=1.270 [276s]
+
+======================================================================
+SUMMARY: Diffusion obs_dim=51, ckpt=diffusion_51d_multi_v1.pt
+======================================================================
+
+-- In-distribution --
+in_dist                Generous 0/20 (  0%)   Real 0/20 (  0%)   avg_best=0.217m   avg_disturb=0.000m
+
+-- STRAIGHT-LINE OOD --
+ood_straight_n3        Generous 1/5 ( 20%)   Real 0/5 (  0%)   avg_best=0.171m   avg_disturb=0.516m
+ood_straight_n4        Generous 2/5 ( 40%)   Real 0/5 (  0%)   avg_best=0.113m   avg_disturb=1.455m
+ood_straight_n5        Generous 1/5 ( 20%)   Real 0/5 (  0%)   avg_best=0.187m   avg_disturb=1.993m
+
+-- TRAIN-STYLE OOD --
+ood_trainstyle_n3      Generous 0/5 (  0%)   Real 0/5 (  0%)   avg_best=0.196m   avg_disturb=0.411m
+ood_trainstyle_n4      Generous 1/5 ( 20%)   Real 0/5 (  0%)   avg_best=0.136m   avg_disturb=0.703m
+ood_trainstyle_n5      Generous 0/5 (  0%)   Real 0/5 (  0%)   avg_best=0.181m   avg_disturb=1.524m
+
+Total time: 4.6 min
+Saved: diffusion_51d_multi_v1_DUAL_results.json
